@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #18181f;
+  --border: #2a2a38;
+  --accent: #c8f060;
+  --accent2: #60c8f0;
+  --accent3: #f060a8;
+  --text: #e8e8f0;
+  --muted: #7070a0;
+  --danger: #f07060;
+  --warn: #f0c060;
+  --green1: #C0DD97;
+  --green2: #97C459;
+  --green3: #639922;
+  --green4: #3B6D11;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+/* NAV */
+.nav { display: flex; align-items: center; gap: 0; border-bottom: 1px solid var(--border); padding: 0 32px; position: sticky; top: 0; background: var(--bg); z-index: 50; }
+.nav-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); margin-right: 32px; padding: 14px 0; }
+.nav-tab { padding: 16px 18px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s; }
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 36px 24px; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* SECTION TITLE */
+.section-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); padding: 24px; position: relative; overflow: hidden; margin-bottom: 16px; }
+.card-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+.card:hover { border-color: rgba(200,240,96,0.3); }
+
+/* GRIDS */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media(max-width:700px){.two-col,.three-col{grid-template-columns:1fr;} .week-grid{grid-template-columns:1fr!important;}}
+
+/* COUNTDOWN BOXES */
+.countdown-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+.cd-box { background: var(--surface); border: 1px solid var(--border); padding: 18px 20px; text-align: center; }
+.cd-days { font-family: 'Bebas Neue', sans-serif; font-size: 48px; line-height: 1; }
+.cd-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.cd-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+.cd-sat .cd-days { color: var(--warn); }
+.cd-ib .cd-days { color: var(--accent); }
+.cd-calc .cd-days { color: var(--accent2); }
+
+/* METRIC CARDS */
+.metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+.metric { background: var(--surface2); border: 1px solid var(--border); padding: 16px 20px; }
+.metric-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.metric-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--text); line-height: 1; }
+
+/* WEEKLY SCHEDULE */
+.week-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 8px; margin-bottom: 16px; }
+.day-col { background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+.day-header { padding: 10px 12px; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+.day-header.weekend { color: var(--accent2); }
+.day-header.flex-day { color: var(--accent); }
+.time-block { padding: 8px 10px; border-bottom: 1px solid rgba(42,42,56,0.4); font-size: 11px; line-height: 1.4; }
+.time-block:last-child { border-bottom: none; }
+.block-time { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-bottom: 2px; }
+.block-label { font-weight: 600; font-size: 11px; }
+.b-school { border-left: 2px solid var(--accent2); padding-left: 8px; }
+.b-extra { border-left: 2px solid var(--accent3); padding-left: 8px; }
+.b-free { border-left: 2px solid var(--muted); padding-left: 8px; opacity: 0.6; }
+.b-sleep { border-left: 2px solid #6060f0; padding-left: 8px; }
+.b-physics { border-left: 2px solid #f07060; padding-left: 8px; }
+.b-sat { border-left: 2px solid var(--warn); padding-left: 8px; }
+.b-ib { border-left: 2px solid #a060f0; padding-left: 8px; }
+.b-calc { border-left: 2px solid #6080f0; padding-left: 8px; }
+.b-passion { border-left: 2px solid #60f0b0; padding-left: 8px; }
+
+/* SUBJECT MATRIX */
+.subject-grid { display: grid; grid-template-columns: 1fr auto auto auto; gap: 0; }
+.sg-header { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.sg-row > div { padding: 13px 12px; border-bottom: 1px solid rgba(42,42,56,0.5); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.sg-row:last-child > div { border-bottom: none; }
+.subject-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.priority-badge { font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 8px; letter-spacing: 1px; }
+.p-high { background: rgba(240,96,96,0.15); color: var(--danger); border: 1px solid rgba(240,96,96,0.3); }
+.p-med { background: rgba(240,192,96,0.15); color: var(--warn); border: 1px solid rgba(240,192,96,0.3); }
+.p-low { background: rgba(200,240,96,0.15); color: var(--accent); border: 1px solid rgba(200,240,96,0.3); }
+
+/* TIMELINE */
+.timeline { display: flex; flex-direction: column; gap: 0; position: relative; }
+.timeline::before { content: ''; position: absolute; left: 40px; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.tl-item { display: grid; grid-template-columns: 80px 1fr; gap: 24px; padding: 14px 0; position: relative; align-items: center; }
+.tl-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-align: right; }
+.tl-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); position: absolute; left: 36px; top: 50%; transform: translateY(-50%); z-index: 2; }
+.tl-dot.urgent { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+.tl-dot.warn { background: var(--warn); }
+.tl-content { padding-left: 28px; }
+.tl-content strong { display: block; font-size: 13px; font-weight: 600; }
+.tl-content span { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+/* ROUTINE */
+.routine-row { display: grid; grid-template-columns: 90px 1fr; gap: 16px; padding: 10px 0; border-bottom: 1px solid rgba(42,42,56,0.5); align-items: center; font-size: 13px; }
+.routine-row:last-child { border-bottom: none; }
+.routine-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+.routine-action strong { display: block; font-size: 13px; }
+.routine-action span { font-size: 12px; color: var(--muted); }
+
+/* RULES */
+.rules-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.rules-list li { display: flex; gap: 14px; align-items: flex-start; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); }
+.rule-num { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--accent); line-height: 1; flex-shrink: 0; width: 24px; text-align: center; }
+.rule-text strong { color: var(--text); display: block; font-size: 14px; margin-bottom: 2px; }
+.rule-text span { color: var(--muted); font-size: 13px; }
+
+/* CHECK-IN */
+.checkin-box { background: var(--surface2); border: 1px solid var(--accent); padding: 24px; margin-bottom: 16px; }
+.checkin-box p { font-size: 14px; line-height: 1.7; }
+.checkin-box .prompt { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* SAT BAR */
+.sat-bar-wrap { margin: 8px 0 16px; }
+.sat-labels { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.sat-bar { height: 8px; background: var(--surface2); border: 1px solid var(--border); position: relative; overflow: visible; }
+.sat-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); position: relative; }
+.sat-target-line { position: absolute; top: -4px; width: 2px; height: 16px; background: var(--accent); }
+.sat-target-label { position: absolute; top: -20px; transform: translateX(-50%); font-family: 'DM Mono', monospace; font-size: 9px; color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
+
+/* FLEX MODE */
+.flex-info { background: rgba(200,240,96,0.04); border: 1px solid var(--accent); padding: 14px 18px; margin-bottom: 16px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 1px; }
+.decision-box { background: var(--surface2); border: 1px solid var(--border); padding: 16px 20px; margin-bottom: 32px; display: flex; gap: 16px; align-items: flex-start; }
+.decision-q { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--accent); line-height: 1; flex-shrink: 0; }
+
+/* PHASE PLAN */
+.phase-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 16px; }
+
+/* ---- TRACKER TAB ---- */
+.tracker-section { margin-bottom: 28px; }
+.subject-track-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid rgba(42,42,56,0.5); }
+.subject-track-row:last-child { border-bottom: none; }
+.subj-info { flex: 1; }
+.subj-name-track { font-size: 14px; color: var(--text); }
+.hours-bar { height: 3px; border-radius: 2px; background: var(--border); margin-top: 5px; overflow: hidden; }
+.hours-fill { height: 3px; border-radius: 2px; transition: width 0.4s; }
+.subj-hrs-label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); white-space: nowrap; min-width: 80px; text-align: right; }
+.log-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; padding: 4px 10px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; }
+.log-btn:hover { border-color: var(--accent); color: var(--accent); }
+.check-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; color: var(--muted); }
+.check-btn.done { background: var(--accent); border-color: var(--accent); color: #0a0a0f; }
+.week-summary-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 20px; border: 1px solid var(--accent); background: none; color: var(--accent); cursor: pointer; }
+.week-summary-btn:hover { background: rgba(200,240,96,0.1); }
+.reset-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 20px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; }
+.reset-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ---- TIMER TAB ---- */
+.timer-display { font-family: 'Bebas Neue', sans-serif; font-size: 88px; color: var(--text); text-align: center; padding: 1.5rem 0 0.5rem; letter-spacing: 4px; line-height: 1; }
+.timer-task-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align: center; min-height: 18px; margin-bottom: 16px; }
+.progress-bar-wrap { height: 3px; background: var(--border); margin: 0 0 24px; }
+.progress-bar { height: 3px; background: var(--accent); transition: width 1s linear; }
+.timer-btns { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
+.timer-btn { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 24px; border: 1px solid var(--border); background: none; color: var(--text); cursor: pointer; }
+.timer-btn:hover { border-color: var(--accent); color: var(--accent); }
+.timer-btn.primary { border-color: var(--accent); color: var(--accent); }
+.timer-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.task-queue { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+.task-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); font-size: 13px; }
+.task-item.active-task { border-color: var(--accent); }
+.task-name-q { flex: 1; color: var(--text); }
+.task-subj-q { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.task-dur-q { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); white-space: nowrap; }
+.task-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; }
+.task-del:hover { color: var(--danger); }
+.form-row { display: flex; gap: 10px; align-items: center; }
+.form-input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; }
+.form-input:focus { outline: none; border-color: var(--accent); }
+.form-select { padding: 9px 12px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'DM Mono', monospace; font-size: 11px; }
+.form-select:focus { outline: none; border-color: var(--accent); }
+.form-num { width: 80px; padding: 9px 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; text-align: center; min-width: 0; box-sizing: border-box; }
+.form-num:focus { outline: none; border-color: var(--accent); }
+.add-btn { padding: 9px 18px; border: 1px solid var(--accent); background: none; color: var(--accent); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
+.add-btn:hover { background: rgba(200,240,96,0.1); }
+
+/* ---- DAILY PLAN ---- */
+.daily-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(42,42,56,0.4); font-size: 13px; }
+.daily-item:last-child { border-bottom: none; }
+.daily-check { width: 20px; height: 20px; border: 1px solid var(--border); background: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); }
+.daily-check.done { background: var(--accent); border-color: var(--accent); color: #0a0a0f; }
+.daily-name { flex: 1; color: var(--text); }
+.daily-name.done { text-decoration: line-through; color: var(--muted); }
+.daily-hrs { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.daily-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; }
+.daily-del:hover { color: var(--danger); }
+
+/* ---- STREAK ---- */
+.streak-cal { width: 100%; }
+.streak-cal-month { margin-bottom: 20px; }
+.streak-cal-month-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.streak-cal-week-headers { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 4px; }
+.streak-cal-week-header { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); text-align: center; letter-spacing: 1px; }
+.streak-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.s-cell { aspect-ratio: 1; border-radius: 3px; background: var(--surface2); cursor: default; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 9px; color: transparent; transition: transform 0.1s; min-width: 0; }
+.s-cell:hover { transform: scale(1.15); }
+.s-cell.has-date { color: rgba(112,112,160,0.5); }
+.s-cell.is-today { box-shadow: 0 0 0 1px var(--accent); }
+.s-cell.l1 { background: #C0DD97; color: #3B6D11; }
+.s-cell.l2 { background: #97C459; color: #27500A; }
+.s-cell.l3 { background: #639922; color: #173404; }
+.s-cell.l4 { background: #3B6D11; color: #C0DD97; }
+.s-cell.empty { background: transparent; pointer-events: none; }
+.streak-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+.subj-streak-block { margin-bottom: 20px; }
+.subj-streak-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.subj-streak-name { font-size: 13px; flex: 1; }
+.subj-streak-count { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+.subj-cells { display: flex; gap: 3px; flex-wrap: wrap; }
+.subj-cell { width: 14px; height: 14px; border-radius: 2px; background: var(--surface2); }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 200; }
+.modal { background: var(--surface); border: 1px solid var(--border); padding: 28px; width: 380px; max-width: 92vw; }
+.modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--accent); margin-bottom: 20px; letter-spacing: 2px; }
+.modal-field { margin-bottom: 14px; }
+.modal-field label { display: block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+.modal-cancel { padding: 9px 18px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; }
+.modal-confirm { padding: 9px 18px; border: 1px solid var(--accent); background: var(--accent); color: #0a0a0f; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; cursor: pointer; letter-spacing: 1px; }
+.modal-task-info { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); padding: 10px 14px; background: rgba(200,240,96,0.06); border: 1px solid rgba(200,240,96,0.2); margin-bottom: 16px; }
+
+/* ASSIGNMENTS */
+.asgn-table { width: 100%; border-collapse: collapse; }
+.asgn-table th { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; font-weight: 400; }
+.asgn-table td { padding: 12px; border-bottom: 1px solid rgba(42,42,56,0.4); font-size: 13px; vertical-align: middle; }
+.asgn-table tr:last-child td { border-bottom: none; }
+.asgn-table tr.done-row td { opacity: 0.4; }
+.asgn-table tr.done-row .asgn-name { text-decoration: line-through; }
+.asgn-name { font-weight: 600; color: var(--text); }
+.asgn-subject-badge { font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 8px; border-radius: 2px; white-space: nowrap; }
+.priority-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; flex-shrink: 0; }
+.due-overdue { color: var(--danger); font-family: 'DM Mono', monospace; font-size: 11px; }
+.due-today { color: var(--warn); font-family: 'DM Mono', monospace; font-size: 11px; }
+.due-soon { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 11px; }
+.due-normal { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; }
+.asgn-done-btn { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.asgn-done-btn.done { background: var(--accent); border-color: var(--accent); color: #0a0a0f; }
+.asgn-del-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; }
+.asgn-del-btn:hover { color: var(--danger); }
+.filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; padding: 5px 12px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; }
+.filter-btn.active { border-color: var(--accent); color: var(--accent); }
+.asgn-empty { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+.est-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+
+/* NOTIFICATION */
+.notif { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--accent); padding: 14px 20px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); z-index: 300; max-width: 300px; transform: translateY(20px); opacity: 0; transition: all 0.3s; }
+.notif.show { transform: translateY(0); opacity: 1; }
+
+/* FOOTER */
+footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 20px 32px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; letter-spacing: 2px; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.pulse { animation: pulse 2s infinite; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-title">SCC</div>
+  <button class="nav-tab active" onclick="switchTab('overview')">Overview</button>
+  <button class="nav-tab" onclick="switchTab('schedule')">Schedule</button>
+  <button class="nav-tab" onclick="switchTab('tracker')">Tracker</button>
+  <button class="nav-tab" onclick="switchTab('timer')">Timer</button>
+  <button class="nav-tab" onclick="switchTab('streaks')">Streaks</button>
+  <button class="nav-tab" onclick="switchTab('rules')">Rules</button>
+  <button class="nav-tab" onclick="switchTab('assignments')">Assignments</button>
+  <div style="flex:1"></div>
+  <button class="nav-tab" onclick="exportData()" style="color:var(--accent2)">↓ Export</button>
+  <button class="nav-tab" onclick="document.getElementById('import-input').click()" style="color:var(--accent3)">↑ Import</button>
+  <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)" />
+</nav>
+
+<!-- ==================== OVERVIEW ==================== -->
+<div id="tab-overview" class="panel active">
+<div class="container">
+
+  <div style="margin-bottom:32px">
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,80px);line-height:0.9;letter-spacing:2px">STUDY<span style="color:var(--accent);display:block">COMMAND</span></h1>
+    <p style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:12px">IB Senior · Paraguay · Mechatronics Track · Class of 2026</p>
+  </div>
+
+  <div class="countdown-row">
+    <div class="cd-box cd-sat"><div class="cd-days" id="cd-sat">—</div><div class="cd-label">SAT exam</div><div class="cd-date">May 3, 2026</div></div>
+    <div class="cd-box cd-ib"><div class="cd-days" id="cd-ib">—</div><div class="cd-label">IB exams</div><div class="cd-date">Oct 23, 2026</div></div>
+    <div class="cd-box cd-calc"><div class="cd-days" id="cd-calc">—</div><div class="cd-label">ASU calc deadline</div><div class="cd-date">Jul 1, 2026</div></div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric"><div class="metric-label">Hours this week</div><div class="metric-val" id="ov-hrs">0.0</div></div>
+    <div class="metric"><div class="metric-label">Current streak</div><div class="metric-val" id="ov-streak">0</div></div>
+    <div class="metric"><div class="metric-label">Tasks today</div><div class="metric-val" id="ov-tasks">0/0</div></div>
+  </div>
+
+  <div class="section-title">Today's plan</div>
+  <div class="card">
+    <div id="daily-plan-list"><div style="font-size:13px;color:var(--muted);padding:4px 0">No tasks yet.</div></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <input class="form-input" id="new-task-name" placeholder="Task name..." style="flex:2;min-width:160px" />
+      <input class="form-num" id="new-task-hrs" type="number" placeholder="hrs" min="0.1" max="12" step="0.25" />
+      <button class="add-btn" onclick="addDailyTask()">+ Add</button>
+    </div>
+  </div>
+
+  <div class="section-title">Week summary</div>
+  <div class="card" id="week-summary-card">
+    <div style="font-size:13px;color:var(--muted)">Nothing logged yet this week.</div>
+  </div>
+
+  <div class="section-title">SAT Progress</div>
+  <div class="card">
+    <div class="card-title">Score gap analysis</div>
+    <div class="sat-bar-wrap">
+      <div class="sat-labels"><span>400 (min)</span><span>1600 (max)</span></div>
+      <div class="sat-bar">
+        <div class="sat-fill" style="width:75%">
+          <div class="sat-target-line" style="left:calc(91.67% / 75% * 100%)">
+            <div class="sat-target-label">TARGET 1500</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-top:12px">Current: <strong style="color:var(--accent2)">1300</strong> &nbsp;→&nbsp; Target: <strong style="color:var(--warn)">1500–1510</strong> &nbsp;·&nbsp; Gap: <strong style="color:var(--danger)">+200 pts</strong> &nbsp;·&nbsp; 3 SAT sessions/week required</div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== SCHEDULE ==================== -->
+<div id="tab-schedule" class="panel">
+<div class="container">
+
+  <div class="section-title">Weekly Master Schedule</div>
+  <!-- LEGEND -->
+  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;">
+    <span style="display:flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:10px;height:10px;background:var(--accent2);display:inline-block"></span>SCHOOL</span>
+    <span style="display:flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:10px;height:10px;background:var(--accent3);display:inline-block"></span>EXTRA</span>
+    <span style="display:flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:10px;height:10px;background:#f07060;display:inline-block"></span>PHYSICS</span>
+    <span style="display:flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:10px;height:10px;background:var(--warn);display:inline-block"></span>SAT</span>
+    <span style="display:flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:10px;height:10px;background:#a060f0;display:inline-block"></span>IB BLOCK</span>
+    <span style="display:flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:10px;height:10px;background:#6080f0;display:inline-block"></span>SHADOW CALC</span>
+    <span style="display:flex;align-items:center;gap:6px;color:var(--muted)"><span style="width:10px;height:10px;background:#60f0b0;display:inline-block"></span>PASSION PROJECT</span>
+  </div>
+
+  <div class="week-grid">
+    <!-- MON -->
+    <div class="day-col">
+      <div class="day-header">MON</div>
+      <div class="time-block b-free"><div class="block-time">7:30</div><div class="block-label">Wake + prep</div></div>
+      <div class="time-block b-school"><div class="block-time">8–4PM</div><div class="block-label">School</div></div>
+      <div class="time-block b-extra"><div class="block-time">4–5:15</div><div class="block-label">Math Club 📐</div></div>
+      <div class="time-block b-free"><div class="block-time">5:15–7</div><div class="block-label">Dinner / reset</div></div>
+      <div class="time-block b-sat"><div class="block-time">7–7:45</div><div class="block-label">SAT Section (45min)</div></div>
+      <div class="time-block b-ib"><div class="block-time">7:45–9:15</div><div class="block-label">IB Block (1.5hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">9:15–11:30</div><div class="block-label">Wind down</div></div>
+      <div class="time-block b-sleep"><div class="block-time">11:30PM</div><div class="block-label">Lights out</div></div>
+    </div>
+    <!-- TUE -->
+    <div class="day-col">
+      <div class="day-header">TUE</div>
+      <div class="time-block b-free"><div class="block-time">7:30</div><div class="block-label">Wake + prep</div></div>
+      <div class="time-block b-school"><div class="block-time">8–4PM</div><div class="block-label">School</div></div>
+      <div class="time-block b-extra"><div class="block-time">4–6PM</div><div class="block-label">Football ⚽</div></div>
+      <div class="time-block b-free"><div class="block-time">6–8</div><div class="block-label">Dinner / reset</div></div>
+      <div class="time-block b-physics"><div class="block-time">8–10PM</div><div class="block-label">Physics Deep Block (2hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">10–11:30</div><div class="block-label">Wind down</div></div>
+      <div class="time-block b-sleep"><div class="block-time">11:30PM</div><div class="block-label">Lights out</div></div>
+    </div>
+    <!-- WED -->
+    <div class="day-col">
+      <div class="day-header flex-day">WED ✦</div>
+      <div class="time-block b-free"><div class="block-time">7:30</div><div class="block-label">Wake + prep</div></div>
+      <div class="time-block b-school"><div class="block-time">8–4PM</div><div class="block-label">School</div></div>
+      <div class="time-block b-extra"><div class="block-time">4–5PM</div><div class="block-label">Volleyball / Coach 🏐</div></div>
+      <div class="time-block b-free"><div class="block-time">5–7</div><div class="block-label">Dinner / free</div></div>
+      <div class="time-block b-calc"><div class="block-time">7–8PM</div><div class="block-label">Shadow Calc (1hr)</div></div>
+      <div class="time-block b-ib"><div class="block-time">8–9:30PM</div><div class="block-label">IB Block (1.5hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">9:30–11:30</div><div class="block-label">Wind down</div></div>
+      <div class="time-block b-sleep"><div class="block-time">11:30PM</div><div class="block-label">Lights out</div></div>
+      <div style="padding:8px 10px;background:rgba(200,240,96,0.06);border-top:1px dashed var(--accent);font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:1px">✦ FLEX MODE — see Rules tab</div>
+    </div>
+    <!-- THU -->
+    <div class="day-col">
+      <div class="day-header">THU</div>
+      <div class="time-block b-free"><div class="block-time">7:30</div><div class="block-label">Wake + prep</div></div>
+      <div class="time-block b-school"><div class="block-time">8–4PM</div><div class="block-label">School</div></div>
+      <div class="time-block b-extra"><div class="block-time">4–6PM</div><div class="block-label">Volleyball 🏐</div></div>
+      <div class="time-block b-free"><div class="block-time">6–7</div><div class="block-label">Dinner / reset</div></div>
+      <div class="time-block b-physics"><div class="block-time">7–8:30</div><div class="block-label">Physics Repetition (1.5hr)</div></div>
+      <div class="time-block b-ib"><div class="block-time">8:30–10PM</div><div class="block-label">IB Block (1.5hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">10–11:30</div><div class="block-label">Wind down</div></div>
+      <div class="time-block b-sleep"><div class="block-time">11:30PM</div><div class="block-label">Lights out</div></div>
+    </div>
+    <!-- FRI -->
+    <div class="day-col">
+      <div class="day-header">FRI</div>
+      <div class="time-block b-free"><div class="block-time">7:30</div><div class="block-label">Wake + prep</div></div>
+      <div class="time-block b-school"><div class="block-time">8–4PM</div><div class="block-label">School</div></div>
+      <div class="time-block b-extra"><div class="block-time">4–5:15</div><div class="block-label">Math Club 📐</div></div>
+      <div class="time-block b-free"><div class="block-time">5:15–7</div><div class="block-label">Dinner / free</div></div>
+      <div class="time-block b-ib"><div class="block-time">7–7:45</div><div class="block-label">IB Review (45min)</div></div>
+      <div class="time-block b-passion"><div class="block-time">7:45–9:15</div><div class="block-label">Math Club Planning (1.5hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">9:15PM+</div><div class="block-label">Free / social 🎉</div></div>
+    </div>
+    <!-- SAT -->
+    <div class="day-col">
+      <div class="day-header weekend">SAT</div>
+      <div class="time-block b-free"><div class="block-time">8–9</div><div class="block-label">Wake + breakfast</div></div>
+      <div class="time-block b-physics"><div class="block-time">9–11:30</div><div class="block-label">⚡ Physics Power Day (2.5hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">11:30–1</div><div class="block-label">Break / lunch</div></div>
+      <div class="time-block b-sat"><div class="block-time">1–2:30</div><div class="block-label">SAT Prep (1.5hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">2:30–4</div><div class="block-label">Break / free</div></div>
+      <div class="time-block b-passion"><div class="block-time">4–6:30</div><div class="block-label">🦾 Robotic Arm (2.5hr)</div></div>
+      <div class="time-block b-sat"><div class="block-time">6:30–7</div><div class="block-label">SAT Review (30min) optional</div></div>
+      <div class="time-block b-free"><div class="block-time">7PM+</div><div class="block-label">Free evening</div></div>
+    </div>
+    <!-- SUN -->
+    <div class="day-col">
+      <div class="day-header weekend">SUN</div>
+      <div class="time-block b-free"><div class="block-time">8–9:30</div><div class="block-label">Slow morning</div></div>
+      <div class="time-block b-sat"><div class="block-time">9:30–11</div><div class="block-label">SAT Full Section (1.5hr)</div></div>
+      <div class="time-block b-sat"><div class="block-time">11–12</div><div class="block-label">SAT Mistake Review (1hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">12–1:30</div><div class="block-label">Lunch / break</div></div>
+      <div class="time-block b-physics"><div class="block-time">1:30–2:30</div><div class="block-label">Physics Review (1hr)</div></div>
+      <div class="time-block b-passion"><div class="block-time">2:30–3:30</div><div class="block-label">🦾 Robotic Arm (1hr)</div></div>
+      <div class="time-block b-calc"><div class="block-time">3:30–4:30</div><div class="block-label">Shadow Calc (1hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">4:30–5</div><div class="block-label">Break</div></div>
+      <div class="time-block b-ib"><div class="block-time">5–6</div><div class="block-label">IB Block + Weekly Review (1hr)</div></div>
+      <div class="time-block b-free"><div class="block-time">6PM+</div><div class="block-label">Family / full rest 🧠</div></div>
+    </div>
+  </div>
+
+  <!-- WEDNESDAY FLEX MODE -->
+  <div class="section-title">Wednesday Flex Mode</div>
+  <div class="flex-info">✦ &nbsp;APPLIES WHEN YOU SKIP VOLLEYBALL &nbsp;·&nbsp; ~HALF OF WEDNESDAYS &nbsp;·&nbsp; EXTRA HOUR FREED: 4–5PM</div>
+  <div class="two-col">
+    <div class="card" style="border-color:var(--accent2)">
+      <div class="card-title" style="color:var(--accent2)">Option A — Study / Get Ahead</div>
+      <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:14px;letter-spacing:1px">USE WHEN: behind on a subject or test coming up</div>
+      <div class="routine-row"><div class="routine-time">4–5PM</div><div class="routine-action"><strong>Catch-up block (1hr)</strong><span>Whichever IB subject needs most attention, or get ahead on Thursday's physics</span></div></div>
+      <div class="routine-row"><div class="routine-time">5–7PM</div><div class="routine-action"><strong>Dinner / free</strong><span>Full reset</span></div></div>
+      <div class="routine-row"><div class="routine-time">7–8PM</div><div class="routine-action"><strong>Shadow Calc (1hr)</strong><span>As normal</span></div></div>
+      <div class="routine-row"><div class="routine-time">8–9:30PM</div><div class="routine-action"><strong>IB Block (1.5hr)</strong><span>As normal</span></div></div>
+    </div>
+    <div class="card" style="border-color:var(--accent3)">
+      <div class="card-title" style="color:var(--accent3)">Option B — College App Prep</div>
+      <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:14px;letter-spacing:1px">USE WHEN: coach session that week or apps need attention</div>
+      <div class="routine-row"><div class="routine-time">4–5PM</div><div class="routine-action"><strong>College app work (1hr)</strong><span>Essay drafting, activity list, school research, coach prep</span></div></div>
+      <div class="routine-row"><div class="routine-time">5–7PM</div><div class="routine-action"><strong>Dinner / free</strong><span>Full reset</span></div></div>
+      <div class="routine-row"><div class="routine-time">7–8PM</div><div class="routine-action"><strong>Shadow Calc (1hr)</strong><span>As normal</span></div></div>
+      <div class="routine-row"><div class="routine-time">8–9:30PM</div><div class="routine-action"><strong>IB Block (1.5hr)</strong><span>As normal</span></div></div>
+    </div>
+  </div>
+  <div class="decision-box">
+    <div class="decision-q">?</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">How to decide every Sunday</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7">Check your weekly review: <em>Am I behind on anything?</em> Yes → Option A. On track + coach that week → Option B. On track, no coach → your call. Never waste the free hour.</div>
+    </div>
+  </div>
+
+  <!-- PHASE PLAN -->
+  <div class="section-title">60-Day Physics Phase Plan</div>
+  <div class="phase-grid">
+    <div class="card">
+      <div class="card-title" style="color:var(--warn)">⚡ Phase 1 — Weeks 1–5</div>
+      <strong style="color:var(--accent);display:block;margin-bottom:8px;font-size:13px">LEARN ALL CONTENT</strong>
+      <div style="font-size:13px;line-height:1.9;color:var(--text)">Wk 1 · Kinematics<br>Wk 2 · Newton's Laws<br>Wk 3 · Work, Energy, Power<br>Wk 4 · Momentum & Collisions<br>Wk 5 · Rotation + Gravitation + SHM</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--accent3)">🔥 Phase 2 — Weeks 6–7</div>
+      <strong style="color:var(--accent);display:block;margin-bottom:8px;font-size:13px">INTEGRATION TRAINING</strong>
+      <div style="font-size:13px;line-height:1.9;color:var(--text)">No new content<br>Tue · Mixed unit problems<br>Thu · Timed MCQ sets<br>Sat · Full FRQ practice<br>Sun · Deep mistake analysis</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--danger)">🏁 Phase 3 — Weeks 8–9</div>
+      <strong style="color:var(--accent);display:block;margin-bottom:8px;font-size:13px">EXAM MODE</strong>
+      <div style="font-size:13px;line-height:1.9;color:var(--text)">Tue · Timed section<br>Thu · Weak-topic drills<br>Sat · Full practice exam<br>Sun · Corrections + formula mastery</div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section-title">Key Deadlines</div>
+  <div class="card">
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-date">MAR 2026</div><div class="tl-dot warn"></div><div class="tl-content"><strong>SAT Practice Test</strong><span>Full mock — baseline before May</span></div></div>
+      <div class="tl-item"><div class="tl-date">MAY 3</div><div class="tl-dot urgent pulse"></div><div class="tl-content"><strong>SAT Exam Day</strong><span>Target: 1500–1510</span></div></div>
+      <div class="tl-item"><div class="tl-date">JUL 1</div><div class="tl-dot warn pulse"></div><div class="tl-content"><strong>ASU MAT 265 Deadline</strong><span>Complete Calculus for Engineers I — get transcript</span></div></div>
+      <div class="tl-item"><div class="tl-date">OCT 23</div><div class="tl-dot urgent pulse"></div><div class="tl-content"><strong>IB Exams Begin</strong><span>All 6 subjects — peak crunch</span></div></div>
+      <div class="tl-item"><div class="tl-date">NOV 13</div><div class="tl-dot urgent"></div><div class="tl-content"><strong>IB Exams End</strong><span>Finish line</span></div></div>
+      <div class="tl-item"><div class="tl-date">NOV 2026</div><div class="tl-dot"></div><div class="tl-content"><strong>College Apps Due</strong><span>T25 Early Action / Regular Decision</span></div></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== TRACKER ==================== -->
+<div id="tab-tracker" class="panel">
+<div class="container">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div class="section-title" style="margin:0">Weekly Progress</div>
+    <div style="display:flex;gap:8px">
+      <button class="reset-btn" onclick="resetWeek()">Reset week</button>
+      <button class="week-summary-btn" onclick="showWeeklySummary()">Weekly summary →</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:16px 24px">
+    <div id="tracker-list"></div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">Subject Priority Matrix</div>
+  <div class="card">
+    <div class="card-title">Weekly hour targets</div>
+    <div class="subject-grid">
+      <div class="sg-header">Subject</div>
+      <div class="sg-header" style="text-align:center">Priority</div>
+      <div class="sg-header" style="text-align:center">Target</div>
+      <div class="sg-header" style="text-align:center">Why</div>
+      <div class="sg-row"><div><span class="subject-dot" style="background:#f07060"></span>Physics / Mechanics</div><div style="justify-content:center"><span class="priority-badge p-high">HIGH</span></div><div style="justify-content:center;font-family:'DM Mono',monospace">5.5hr</div><div style="color:var(--muted);font-size:12px">Core exam subject, hardest unit</div></div>
+      <div class="sg-row"><div><span class="subject-dot" style="background:var(--warn)"></span>SAT Prep</div><div style="justify-content:center"><span class="priority-badge p-high">HIGH</span></div><div style="justify-content:center;font-family:'DM Mono',monospace">3hr</div><div style="color:var(--muted);font-size:12px">+200pt gap, 3× sessions/week</div></div>
+      <div class="sg-row"><div><span class="subject-dot" style="background:#a060f0"></span>IB Block (general)</div><div style="justify-content:center"><span class="priority-badge p-high">HIGH</span></div><div style="justify-content:center;font-family:'DM Mono',monospace">4.5hr</div><div style="color:var(--muted);font-size:12px">Mon + Wed + Thu + Sun</div></div>
+      <div class="sg-row"><div><span class="subject-dot" style="background:#60f0b0"></span>Passion Project</div><div style="justify-content:center"><span class="priority-badge p-med">MED</span></div><div style="justify-content:center;font-family:'DM Mono',monospace">3.5hr</div><div style="color:var(--muted);font-size:12px">Robotic arm + Math Club planning</div></div>
+      <div class="sg-row"><div><span class="subject-dot" style="background:#6080f0"></span>Shadow Calc BC</div><div style="justify-content:center"><span class="priority-badge p-med">MED</span></div><div style="justify-content:center;font-family:'DM Mono',monospace">2hr</div><div style="color:var(--muted);font-size:12px">Wed + Sun — concepts fresh all week</div></div>
+      <div class="sg-row"><div><span class="subject-dot" style="background:#f0a060"></span>ASU Calculus</div><div style="justify-content:center"><span class="priority-badge p-med">MED</span></div><div style="justify-content:center;font-family:'DM Mono',monospace">2hr</div><div style="color:var(--muted);font-size:12px">MAT 265 — done by Jul 1</div></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== TIMER ==================== -->
+<div id="tab-timer" class="panel">
+<div class="container">
+
+  <div class="card" style="text-align:center">
+    <div class="timer-task-label" id="timer-task-label">No task running — add one below</div>
+    <div class="timer-display" id="timer-display">00:00:00</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="timer-progress" style="width:0%"></div></div>
+    <div class="timer-btns">
+      <button class="timer-btn primary" id="btn-start" onclick="timerStart()">▶ Start</button>
+      <button class="timer-btn" id="btn-pause" onclick="timerPause()" disabled>⏸ Pause</button>
+      <button class="timer-btn" onclick="timerReset()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="section-title">Task Queue</div>
+  <div class="card">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <input class="form-input" id="q-name" placeholder="Task name (e.g. IA progress, SAT math section...)" />
+      <div class="form-row">
+        <select class="form-select" id="q-subject" style="flex:1">
+          <option value="">-- Subject --</option>
+          <option>Physics / Mechanics</option>
+          <option>SAT prep</option>
+          <option>Shadow Calc BC</option>
+          <option>ASU Calculus</option>
+          <option>Robotic arm project</option>
+          <option>Math club planning</option>
+          <option>Spanish Literature HL</option>
+          <option>History HL</option>
+          <option>Math AA SL</option>
+          <option>English B HL</option>
+          <option>Business Mgmt SL</option>
+          <option>Other</option>
+        </select>
+        <input class="form-num" id="q-hrs" type="number" placeholder="hrs" min="0.1" max="12" step="0.25" />
+        <button class="add-btn" onclick="addToQueue()">+ Add</button>
+      </div>
+    </div>
+    <div class="task-queue" id="task-queue">
+      <div style="font-size:13px;color:var(--muted);padding:8px 0">Queue is empty.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== STREAKS ==================== -->
+<div id="tab-streaks" class="panel">
+<div class="container">
+
+  <div class="section-title">Overall Activity — Last 12 Months</div>
+  <div class="card">
+    <div class="streak-cal" id="streak-grid"></div>
+    <div class="streak-legend">
+      Less
+      <div class="s-cell has-date" style="background:var(--surface2)">1</div>
+      <div class="s-cell l1">1</div>
+      <div class="s-cell l2">1</div>
+      <div class="s-cell l3">1</div>
+      <div class="s-cell l4">1</div>
+      More &nbsp;·&nbsp; <span id="streak-total-days">0 study days</span> &nbsp;·&nbsp; <span id="streak-current">0 day streak</span>
+    </div>
+  </div>
+
+
+
+</div>
+</div>
+
+<!-- ==================== RULES ==================== -->
+<div id="tab-rules" class="panel">
+<div class="container">
+
+  <div class="section-title">Non-Negotiable Productivity Rules</div>
+  <ul class="rules-list" style="margin-bottom:32px">
+    <li><div class="rule-num">1</div><div class="rule-text"><strong>Phone goes in another room during study blocks.</strong><span>Not face-down. Not on silent. In another room. This single habit is worth 30% more retention.</span></div></li>
+    <li><div class="rule-num">2</div><div class="rule-text"><strong>Pomodoro 50/10 — not 25/5.</strong><span>You're doing IB + uni courses. 50 minutes deep work, 10 minutes completely off-screen.</span></div></li>
+    <li><div class="rule-num">3</div><div class="rule-text"><strong>Lights out by 11:30PM on school nights.</strong><span>Sleep deprivation tanks Physics performance more than anything else. Protect it like a class.</span></div></li>
+    <li><div class="rule-num">4</div><div class="rule-text"><strong>Wednesday is your flex day — decide every Sunday.</strong><span>Check your weekly review: behind on something → Option A (study). On track + coach meeting → Option B (college apps). Never waste it.</span></div></li>
+    <li><div class="rule-num">5</div><div class="rule-text"><strong>Start every session by writing one specific goal.</strong><span>"Finish 2 SAT math sections" beats "study SAT." Specificity kills procrastination.</span></div></li>
+    <li><div class="rule-num">6</div><div class="rule-text"><strong>Physics and Literature get your sharpest hours.</strong><span>If tired → do Business or English. Never waste peak mental state on easy subjects.</span></div></li>
+    <li><div class="rule-num">7</div><div class="rule-text"><strong>Every chat with Claude = accountability check-in.</strong><span>Open every conversation with your study report before asking for help.</span></div></li>
+    <li><div class="rule-num">8</div><div class="rule-text"><strong>Review time ≥ practice time for SAT.</strong><span>Don't cram full tests constantly. Always review mistakes longer than you practiced.</span></div></li>
+    <li><div class="rule-num">9</div><div class="rule-text"><strong>Never two heavy cognitive days back-to-back.</strong><span>Rhythm: Deep → Medium → Deep → Light → Power → Reset. Friday is your light day. Protect it.</span></div></li>
+  </ul>
+
+  <div class="section-title">How to Check In With Claude</div>
+  <div class="checkin-box">
+    <p>Every time you start a conversation, open with a quick update. This is the protocol:</p>
+    <div class="prompt">"Yesterday I studied [SUBJECT] for [X] hours. I covered [TOPIC]. I did / did not complete my scheduled block. Today I need help with [X]."</div>
+    <p style="margin-top:16px;color:var(--muted);font-size:13px">Based on your check-in, Claude will flag if you're falling behind, adjust priorities, and help with whatever you need — content review, practice problems, essay feedback, SAT strategy, or college app prep.</p>
+  </div>
+
+  <div class="section-title">Optimized Daily Routine</div>
+  <div class="card">
+    <div class="routine-row"><div class="routine-time">7:30 AM</div><div class="routine-action"><strong>Wake up — no snooze</strong><span>Hydrate immediately. No phone for 10 min.</span></div></div>
+    <div class="routine-row"><div class="routine-time">7:30–7:50</div><div class="routine-action"><strong>Quick prep</strong><span>Get ready, eat, 10-min commute</span></div></div>
+    <div class="routine-row"><div class="routine-time">During school</div><div class="routine-action"><strong>Active listening mode</strong><span>Front row if possible — Physics & Lit especially</span></div></div>
+    <div class="routine-row"><div class="routine-time">Post-activity</div><div class="routine-action"><strong>30-min reset buffer</strong><span>Eat, decompress — do NOT go straight to studying</span></div></div>
+    <div class="routine-row"><div class="routine-time">7–10 PM</div><div class="routine-action"><strong>Deep study block</strong><span>Phone in another room, full focus, 50/10 Pomodoro</span></div></div>
+    <div class="routine-row"><div class="routine-time">10–11:30 PM</div><div class="routine-action"><strong>Wind down</strong><span>Light review, flashcards — no heavy new content</span></div></div>
+    <div class="routine-row"><div class="routine-time">11:30 PM</div><div class="routine-action"><strong>Lights out — hard cutoff</strong><span>Consistent sleep = better memory consolidation</span></div></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== ASSIGNMENTS ==================== -->
+<div id="tab-assignments" class="panel">
+<div class="container">
+
+  <div class="section-title">Assignment Tracker</div>
+
+  <!-- ADD FORM -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">Add assignment</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <input class="form-input" id="asgn-name" placeholder="Assignment name..." />
+      <select class="form-select" id="asgn-subject">
+        <option value="">-- Subject --</option>
+        <option>Physics / Mechanics</option>
+        <option>SAT prep</option>
+        <option>Shadow Calc BC</option>
+        <option>ASU Calculus</option>
+        <option>Robotic arm project</option>
+        <option>Math club planning</option>
+        <option>Spanish Literature HL</option>
+        <option>History HL</option>
+        <option>Math AA SL</option>
+        <option>English B HL</option>
+        <option>Business Mgmt SL</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:center">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">DUE DATE</div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <input class="form-num" id="asgn-due-d" type="number" placeholder="DD" min="1" max="31" style="width:58px;text-align:center;padding:9px 6px" />
+          <select class="form-select" id="asgn-due-m" style="width:80px">
+            <option value="">MM</option>
+            <option value="01">Jan</option>
+            <option value="02">Feb</option>
+            <option value="03">Mar</option>
+            <option value="04">Apr</option>
+            <option value="05">May</option>
+            <option value="06">Jun</option>
+            <option value="07">Jul</option>
+            <option value="08">Aug</option>
+            <option value="09">Sep</option>
+            <option value="10">Oct</option>
+            <option value="11">Nov</option>
+            <option value="12">Dec</option>
+          </select>
+          <input class="form-num" id="asgn-due-y" type="number" placeholder="YYYY" min="2026" max="2030" value="2026" style="width:76px;text-align:center;padding:9px 6px" />
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">PRIORITY</div>
+        <select class="form-select" id="asgn-priority">
+          <option value="high">High</option>
+          <option value="med" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">EST. TIME</div>
+        <input class="form-num" id="asgn-est" type="number" placeholder="hrs" min="0.25" max="50" step="0.25" style="width:100%" />
+      </div>
+      <button class="add-btn" onclick="addAssignment()" style="align-self:flex-end;height:38px">+ Add</button>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-row">
+    <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px">SHOW:</span>
+    <button class="filter-btn active" onclick="setFilter('pending', this)">Pending</button>
+    <button class="filter-btn" onclick="setFilter('all', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('done', this)">Completed</button>
+    <button class="filter-btn" onclick="setFilter('high', this)">High priority</button>
+    <div style="flex:1"></div>
+    <span id="asgn-count" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)"></span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="asgn-table">
+      <thead>
+        <tr>
+          <th style="width:28px"></th>
+          <th>Assignment</th>
+          <th>Subject</th>
+          <th>Due</th>
+          <th>Priority</th>
+          <th>Est.</th>
+          <th style="width:32px"></th>
+        </tr>
+      </thead>
+      <tbody id="asgn-tbody"></tbody>
+    </table>
+    <div id="asgn-empty" class="asgn-empty" style="display:none">No assignments here. Nice.</div>
+  </div>
+
+</div>
+</div>
+
+<!-- LOG MODAL -->
+<div id="log-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3>Log Session</h3>
+    <div class="modal-task-info" id="log-modal-info">Task complete</div>
+    <div class="modal-field">
+      <label>Subject</label>
+      <select class="form-select" id="log-subject" style="width:100%">
+        <option>Physics / Mechanics</option>
+        <option>SAT prep</option>
+        <option>Shadow Calc BC</option>
+        <option>ASU Calculus</option>
+        <option>Robotic arm project</option>
+        <option>Math club planning</option>
+        <option>Spanish Literature HL</option>
+        <option>History HL</option>
+        <option>Math AA SL</option>
+        <option>English B HL</option>
+        <option>Business Mgmt SL</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Hours completed</label>
+      <input class="form-num" id="log-hrs" type="number" min="0.1" max="12" step="0.25" style="width:100%" />
+    </div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmLog()">Log it</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<footer>
+  <span>STUDY COMMAND CENTER v3.0</span>
+  <span>IB NOV 2026 · SAT MAY 2026 · ASU CALC JUL 2026</span>
+  <span id="footer-date"></span>
+</footer>
+
+<script>
+// ---- DATA KEYS ----
+const todayKey = () => new Date().toISOString().slice(0,10);
+const weekKey = () => {
+  const d = new Date(), day = d.getDay();
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  return 'week_' + mon.toISOString().slice(0,10);
+};
+
+function ls(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; } }
+function ss(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+const SUBJECTS = [
+  { name: 'Physics / Mechanics', color: '#f07060', target: 5.5 },
+  { name: 'SAT prep', color: '#f0c060', target: 3 },
+  { name: 'IB block', color: '#a060f0', target: 4.5 },
+  { name: 'Shadow Calc BC', color: '#6080f0', target: 2 },
+  { name: 'ASU Calculus', color: '#f0a060', target: 2 },
+  { name: 'Robotic arm project', color: '#60f0b0', target: 2.5 },
+  { name: 'Math club planning', color: '#60f0b0', target: 1.5 },
+  { name: 'Spanish Literature HL', color: '#f060a8', target: 1 },
+  { name: 'History HL', color: '#60c8f0', target: 1 },
+  { name: 'Math AA SL', color: '#c8f060', target: 1 },
+  { name: 'English B HL', color: '#a060f0', target: 0.5 },
+  { name: 'Business Mgmt SL', color: '#6080f0', target: 0.5 },
+];
+
+let weekData = ls(weekKey(), {});
+let activityLog = ls('activityLog', {});
+let dailyPlan = ls('dailyPlan_' + todayKey(), []);
+let taskQueue = [];
+let timerState = { running: false, paused: false, remaining: 0, total: 0, name: '', subj: '', interval: null, endTime: null, pausedAt: null, startedDay: null };
+let pendingLog = null;
+
+// ---- UTILS ----
+function daysUntil(d) {
+  const t = new Date(d), n = new Date();
+  n.setHours(0,0,0,0); t.setHours(0,0,0,0);
+  return Math.ceil((t - n) / 86400000);
+}
+
+function getWeekHrs() { return Object.values(weekData).reduce((a, b) => a + (b.hrs || 0), 0); }
+
+function getStreak() {
+  let s = 0;
+  const d = new Date();
+  for (let i = 0; i < 365; i++) {
+    const k = new Date(d); k.setDate(d.getDate() - i);
+    const key = k.toISOString().slice(0,10);
+    if (activityLog[key] && activityLog[key] > 0) s++;
+    else if (i > 0) break;
+  }
+  return s;
+}
+
+function showNotif(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ---- TABS ----
+function switchTab(t) {
+  document.querySelectorAll('.nav-tab').forEach((el, i) => {
+    const tabs = ['overview','schedule','tracker','timer','streaks','rules','assignments'];
+    el.classList.toggle('active', tabs[i] === t);
+  });
+  document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  if (t === 'overview') renderOverview();
+  if (t === 'tracker') renderTracker();
+  if (t === 'streaks') renderStreaks();
+  if (t === 'timer') ensureOrganizerTask();
+  if (t === 'assignments') renderAssignments();
+}
+
+function ensureOrganizerTask() {
+  const alreadyQueued = taskQueue.some(t => t._organizer);
+  if (!alreadyQueued && !timerState.running && !timerState.paused) {
+    taskQueue.unshift({ name: 'Organize & plan this session', subj: 'Other', hrs: 0.17, _organizer: true });
+    renderQueue();
+  }
+}
+
+// ---- OVERVIEW ----
+function renderOverview() {
+  document.getElementById('cd-sat').textContent = daysUntil('2026-05-03');
+  document.getElementById('cd-ib').textContent = daysUntil('2026-10-23');
+  document.getElementById('cd-calc').textContent = daysUntil('2026-07-01');
+  document.getElementById('ov-hrs').textContent = getWeekHrs().toFixed(1);
+  document.getElementById('ov-streak').textContent = getStreak();
+  const done = dailyPlan.filter(t => t.done).length;
+  document.getElementById('ov-tasks').textContent = done + '/' + dailyPlan.length;
+  renderDailyPlan();
+  renderWeekSummary();
+}
+
+function renderDailyPlan() {
+  const el = document.getElementById('daily-plan-list');
+  if (!dailyPlan.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:4px 0">No tasks yet.</div>'; return; }
+  el.innerHTML = dailyPlan.map((t, i) => `
+    <div class="daily-item">
+      <button class="daily-check${t.done ? ' done' : ''}" onclick="toggleDailyTask(${i})">${t.done ? '✓' : ''}</button>
+      <div class="daily-name${t.done ? ' done' : ''}">${t.name}</div>
+      <div class="daily-hrs">${t.hrs}hr</div>
+      <button class="daily-del" onclick="removeDailyTask(${i})">×</button>
+    </div>`).join('');
+  const done = dailyPlan.filter(t => t.done).length;
+  document.getElementById('ov-tasks').textContent = done + '/' + dailyPlan.length;
+}
+
+function addDailyTask() {
+  const name = document.getElementById('new-task-name').value.trim();
+  const hrs = parseFloat(document.getElementById('new-task-hrs').value);
+  if (!name) return;
+  dailyPlan.push({ name, hrs: hrs || 1, done: false });
+  ss('dailyPlan_' + todayKey(), dailyPlan);
+  document.getElementById('new-task-name').value = '';
+  document.getElementById('new-task-hrs').value = '';
+  renderDailyPlan();
+}
+
+function toggleDailyTask(i) {
+  dailyPlan[i].done = !dailyPlan[i].done;
+  ss('dailyPlan_' + todayKey(), dailyPlan);
+  renderDailyPlan();
+}
+
+function removeDailyTask(i) {
+  dailyPlan.splice(i, 1);
+  ss('dailyPlan_' + todayKey(), dailyPlan);
+  renderDailyPlan();
+}
+
+function renderWeekSummary() {
+  const el = document.getElementById('week-summary-card');
+  const entries = Object.entries(weekData).filter(([, v]) => v.hrs > 0);
+  if (!entries.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted)">Nothing logged yet this week.</div>'; return; }
+  const total = getWeekHrs();
+  el.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:2px">WEEK TOTAL: <span style="color:var(--accent)">${total.toFixed(1)}hr</span></div>` +
+    entries.map(([s, v]) => {
+      const subj = SUBJECTS.find(x => x.name === s) || { color: '#888' };
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(42,42,56,0.5)">
+        <div style="width:8px;height:8px;border-radius:50%;background:${subj.color};flex-shrink:0"></div>
+        <span style="flex:1;font-size:13px">${s}</span>
+        <span style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${v.sessions || 0} sessions</span>
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent)">${(v.hrs || 0).toFixed(1)}hr</span>
+      </div>`;
+    }).join('');
+}
+
+// ---- TRACKER ----
+function renderTracker() {
+  weekData = ls(weekKey(), {});
+  const el = document.getElementById('tracker-list');
+  el.innerHTML = SUBJECTS.map(s => {
+    const d = weekData[s.name] || { hrs: 0, done: false, sessions: 0 };
+    const pct = Math.min(100, ((d.hrs || 0) / s.target) * 100);
+    return `<div class="subject-track-row">
+      <div style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
+      <div class="subj-info">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="subj-name-track">${s.name}</span>
+          <button class="log-btn" onclick="openModal('${s.name}')">+ log</button>
+        </div>
+        <div class="hours-bar"><div class="hours-fill" style="width:${pct.toFixed(1)}%;background:${s.color}"></div></div>
+      </div>
+      <div class="subj-hrs-label">${(d.hrs || 0).toFixed(1)} / ${s.target}hr</div>
+      <button class="check-btn${d.done ? ' done' : ''}" onclick="toggleDone('${s.name}')" title="Mark session done">${d.done ? '✓' : ''}</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleDone(name) {
+  if (!weekData[name]) weekData[name] = { hrs: 0, done: false, sessions: 0 };
+  weekData[name].done = !weekData[name].done;
+  ss(weekKey(), weekData);
+  renderTracker();
+}
+
+function resetWeek() {
+  if (!confirm('Reset all weekly data? Cannot be undone.')) return;
+  weekData = {};
+  ss(weekKey(), weekData);
+  renderTracker();
+  renderOverview();
+  showNotif('Week reset.');
+}
+
+function showWeeklySummary() {
+  const entries = Object.entries(weekData);
+  const total = getWeekHrs();
+  let msg = `Week summary — total: ${total.toFixed(1)}hr\n\n`;
+  entries.forEach(([s, v]) => { if (v.hrs > 0) msg += `${s}: ${(v.hrs||0).toFixed(1)}hr (${v.sessions||0} sessions)\n`; });
+  if (!entries.length || total === 0) msg += '(no sessions logged)\n';
+  sendToClaudeTab('Here is my weekly study summary:\n\n' + msg + '\nPlease give me a brief honest performance review, tell me what I should prioritize next week, and flag anything I neglected.');
+}
+
+function sendToClaudeTab(msg) {
+  // Open a new tab with claude.ai with the message pre-filled via URL
+  const encoded = encodeURIComponent(msg);
+  window.open('https://claude.ai/new?q=' + encoded, '_blank');
+}
+
+// ---- MODAL ----
+function openModal(subj, info, hrs, logDay) {
+  pendingLog = { subj, logDay: logDay || todayKey() };
+  document.getElementById('log-modal-info').textContent = info || ('Logging hours for: ' + subj);
+  const sel = document.getElementById('log-subject');
+  for (let i = 0; i < sel.options.length; i++) if (sel.options[i].text === subj) sel.selectedIndex = i;
+  document.getElementById('log-hrs').value = hrs || '';
+  document.getElementById('log-modal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('log-modal').style.display = 'none'; pendingLog = null; }
+
+function confirmLog() {
+  const subj = document.getElementById('log-subject').value;
+  const hrs = parseFloat(document.getElementById('log-hrs').value) || 0;
+  if (!subj || !hrs) { showNotif('Enter subject and hours.'); return; }
+  if (!weekData[subj]) weekData[subj] = { hrs: 0, done: false, sessions: 0 };
+  weekData[subj].hrs = (weekData[subj].hrs || 0) + hrs;
+  weekData[subj].sessions = (weekData[subj].sessions || 0) + 1;
+  ss(weekKey(), weekData);
+  const logDay = (pendingLog && pendingLog.logDay) || todayKey();
+  if (!activityLog[logDay]) activityLog[logDay] = 0;
+  activityLog[logDay] += hrs;
+  ss('activityLog', activityLog);
+  closeModal();
+  renderTracker();
+  renderOverview();
+  renderStreaks();
+  showNotif('Logged ' + hrs + 'hr — ' + subj);
+}
+
+// ---- TIMER ----
+function addToQueue() {
+  const name = document.getElementById('q-name').value.trim();
+  const subj = document.getElementById('q-subject').value;
+  const hrs = parseFloat(document.getElementById('q-hrs').value);
+  if (!name || !hrs) { showNotif('Enter task name and hours.'); return; }
+  taskQueue.push({ name, subj, hrs });
+  document.getElementById('q-name').value = '';
+  document.getElementById('q-hrs').value = '';
+  renderQueue();
+}
+
+function renderQueue() {
+  const el = document.getElementById('task-queue');
+  if (!taskQueue.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0">Queue is empty.</div>'; return; }
+  el.innerHTML = taskQueue.map((t, i) => `
+    <div class="task-item${i === 0 && timerState.running ? ' active-task' : ''}">
+      <div class="task-name-q">${t.name}</div>
+      <div class="task-subj-q">${t.subj}</div>
+      <div class="task-dur-q">${t.hrs}hr</div>
+      <button class="task-del" onclick="removeFromQueue(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeFromQueue(i) { taskQueue.splice(i, 1); renderQueue(); }
+
+function timerStart() {
+  if (timerState.paused) {
+    // Resume: shift endTime forward by however long we were paused
+    const pausedDuration = Date.now() - timerState.pausedAt;
+    timerState.endTime += pausedDuration;
+    timerState.paused = false;
+    timerState.running = true;
+    runTimer();
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('btn-pause').disabled = false;
+    return;
+  }
+  if (!taskQueue.length) { showNotif('Add a task to the queue first.'); return; }
+  const t = taskQueue[0];
+  timerState.total = t.hrs * 3600 * 1000; // ms
+  timerState.endTime = Date.now() + timerState.total;
+  timerState.remaining = timerState.total;
+  timerState.name = t.name;
+  timerState.subj = t.subj;
+  timerState.running = true;
+  timerState.paused = false;
+  timerState.pausedAt = null;
+  timerState.startedDay = todayKey();
+  document.getElementById('timer-task-label').textContent = t.name + (t.subj ? ' — ' + t.subj : '');
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-pause').disabled = false;
+  renderQueue();
+  runTimer();
+}
+
+function runTimer() {
+  if (timerState.interval) clearInterval(timerState.interval);
+  timerState.interval = setInterval(() => {
+    if (!timerState.running) { clearInterval(timerState.interval); return; }
+    // Always compute remaining from real wall clock — immune to throttling
+    timerState.remaining = timerState.endTime - Date.now();
+    if (timerState.remaining <= 0) {
+      timerState.remaining = 0;
+      updateTimerDisplay();
+      clearInterval(timerState.interval);
+      timerState.running = false;
+      timerDone();
+      return;
+    }
+    updateTimerDisplay();
+  }, 500); // poll every 500ms so display stays accurate even if some ticks are delayed
+}
+
+function timerPause() {
+  timerState.running = false;
+  timerState.paused = true;
+  timerState.pausedAt = Date.now();
+  clearInterval(timerState.interval);
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-pause').disabled = true;
+}
+
+function timerReset() {
+  clearInterval(timerState.interval);
+  timerState = { running: false, paused: false, remaining: 0, total: 0, name: '', subj: '', interval: null, endTime: null, pausedAt: null, startedDay: null };
+  document.getElementById('timer-display').textContent = '00:00:00';
+  document.getElementById('timer-progress').style.width = '0%';
+  document.getElementById('timer-task-label').textContent = 'No task running — add one below';
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-pause').disabled = true;
+}
+
+function updateTimerDisplay() {
+  const r = Math.max(0, Math.floor(timerState.remaining / 1000));
+  const h = Math.floor(r / 3600), m = Math.floor((r % 3600) / 60), s = r % 60;
+  document.getElementById('timer-display').textContent =
+    String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const pct = timerState.total > 0 ? ((timerState.total - timerState.remaining) / timerState.total) * 100 : 0;
+  document.getElementById('timer-progress').style.width = Math.min(100, pct).toFixed(1) + '%';
+}
+
+function timerDone() {
+  try {
+    const ctx = new AudioContext();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880;
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+    o.start(); o.stop(ctx.currentTime + 1.5);
+  } catch(e) {}
+  const t = taskQueue.shift();
+  renderQueue();
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-pause').disabled = true;
+  document.getElementById('timer-task-label').textContent = 'Done! Log your session.';
+  openModal(t.subj || 'Other', 'Timer complete: ' + t.name + ' (' + t.hrs + 'hr)', t.hrs, timerState.startedDay);
+}
+
+// ---- STREAKS ----
+function renderStreaks() {
+  const grid = document.getElementById('streak-grid');
+  grid.innerHTML = '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const MONTHS = ['March','April','May','June','July','August','September','October','November','December'];
+  const MONTH_NUMS = [2,3,4,5,6,7,8,9,10,11]; // 0-indexed
+  const YEAR = 2026;
+  const DAY_HEADERS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let totalStudyDays = 0;
+
+  MONTHS.forEach((monthName, mi) => {
+    const monthNum = MONTH_NUMS[mi];
+    const firstDay = new Date(YEAR, monthNum, 1);
+    const daysInMonth = new Date(YEAR, monthNum + 1, 0).getDate();
+    // Monday-first offset: getDay() returns 0=Sun,1=Mon... convert to Mon=0
+    const startOffset = (firstDay.getDay() + 6) % 7;
+
+    const monthEl = document.createElement('div');
+    monthEl.className = 'streak-cal-month';
+
+    // Month title
+    const titleEl = document.createElement('div');
+    titleEl.className = 'streak-cal-month-title';
+    titleEl.textContent = monthName + ' ' + YEAR;
+    monthEl.appendChild(titleEl);
+
+    // Day of week headers
+    const headersEl = document.createElement('div');
+    headersEl.className = 'streak-cal-week-headers';
+    DAY_HEADERS.forEach(d => {
+      const h = document.createElement('div');
+      h.className = 'streak-cal-week-header';
+      h.textContent = d;
+      headersEl.appendChild(h);
+    });
+    monthEl.appendChild(headersEl);
+
+    // Calendar grid
+    const calGrid = document.createElement('div');
+    calGrid.className = 'streak-cal-grid';
+
+    // Empty cells before first day
+    for (let e = 0; e < startOffset; e++) {
+      const empty = document.createElement('div');
+      empty.className = 's-cell empty';
+      calGrid.appendChild(empty);
+    }
+
+    // Day cells
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(YEAR, monthNum, day); d.setHours(0,0,0,0);
+      const key = d.toISOString().slice(0,10);
+      const hrs = activityLog[key] || 0;
+      const isPast = d <= today;
+      const isToday = d.getTime() === today.getTime();
+      if (hrs > 0) totalStudyDays++;
+
+      const cell = document.createElement('div');
+      let cls = 's-cell has-date';
+      if (hrs > 0) cls = 's-cell ' + (hrs < 1 ? 'l1' : hrs < 2 ? 'l2' : hrs < 3 ? 'l3' : 'l4');
+      if (isToday) cls += ' is-today';
+      cell.className = cls;
+      cell.textContent = day;
+
+      if (isPast) {
+        cell.style.cursor = 'pointer';
+        cell.addEventListener('click', (e) => { e.stopPropagation(); showDayPopup(key, hrs, isToday, e); });
+      } else {
+        cell.style.opacity = '0.3';
+      }
+
+      calGrid.appendChild(cell);
+    }
+
+    monthEl.appendChild(calGrid);
+    grid.appendChild(monthEl);
+  });
+
+  document.getElementById('streak-total-days').textContent = totalStudyDays + ' study days';
+  document.getElementById('streak-current').textContent = getStreak() + ' day streak';
+
+}
+
+// ---- DAY POPUP ----
+const INSULTS = [
+  "Nothing. Absolutely nothing. MIT doesn't build itself.",
+  "A day wasted is a day your competition used against you.",
+  "Zero hours. Your robotic arm isn't going to build itself, champ.",
+  "Wow. Just wow. Even the volleyball found a way to be more productive than you.",
+  "Your future T25 admissions officer is somewhere working. Just saying.",
+  "0.0hr. The audacity. The sheer audacity.",
+  "This is the kind of day that ages you. Nothing to show for it.",
+  "Cool, a rest day. Three in a row and we're having a serious talk.",
+  "Paraguay's future mechatronics engineer took the day off. Inspirational.",
+  "Even your error log is empty. There were no errors because there was no work.",
+  "Somewhere a kid in Seoul studied 6 hours today. You did zero. Sleep well.",
+  "Ghost mode activated. Unfortunately, IB exams don't ghost you back.",
+  "A completely forgettable day. Which is unfortunate, because you need to be unforgettable.",
+  "Your streak died and you didn't even notice. Iconic.",
+  "No hours logged. Your robotic arm remains an idea. A dream. A vibe."
+];
+
+let insultIndex = ls('insultIndex', 0);
+
+function showDayPopup(key, hrs, isToday, e) {
+  closeDayPopup();
+  const popup = document.createElement('div');
+  popup.id = 'day-popup';
+  popup.style.cssText = `
+    position:fixed; z-index:500;
+    background:var(--surface); border:1px solid var(--border);
+    padding:14px 18px; min-width:220px; max-width:280px;
+    font-family:'DM Sans',sans-serif; font-size:13px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  `;
+
+  const dateLabel = new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  if (hrs > 0) {
+    // Build subject breakdown from weekData stored under that day's week key
+    const wd = ls('week_' + key, {});
+    const entries = Object.entries(wd).filter(([, v]) => v && v.hrs > 0);
+    const breakdown = entries.length
+      ? entries.map(([s, v]) => {
+          const subj = SUBJECTS.find(x => x.name === s) || { color: '#888' };
+          return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(42,42,56,0.4)">
+            <div style="width:7px;height:7px;border-radius:50%;background:${subj.color};flex-shrink:0"></div>
+            <span style="flex:1;font-size:12px">${s}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">${(v.hrs||0).toFixed(1)}hr</span>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:12px;color:var(--muted)">Session logged but no subject detail saved.</div>`;
+
+    popup.innerHTML = `
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">${dateLabel}${isToday ? ' · TODAY' : ''}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px">TOTAL: <span style="color:var(--accent)">${hrs.toFixed(1)}hr</span></div>
+      ${breakdown}`;
+  } else {
+    const insult = INSULTS[insultIndex % INSULTS.length];
+    insultIndex = (insultIndex + 1) % INSULTS.length;
+    ss('insultIndex', insultIndex);
+    popup.innerHTML = `
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--danger);margin-bottom:10px">${dateLabel} · 0hr</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.5;font-style:italic">"${insult}"</div>`;
+  }
+
+  document.body.appendChild(popup);
+
+  // Position near the clicked cell, keeping within viewport
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = e.clientX + 12, y = e.clientY + 12;
+  if (x + 300 > vw) x = e.clientX - 300;
+  if (y + 180 > vh) y = e.clientY - 180;
+  popup.style.left = Math.max(8, x) + 'px';
+  popup.style.top = Math.max(8, y) + 'px';
+
+  setTimeout(() => document.addEventListener('click', closeDayPopup, { once: true }), 50);
+}
+
+function closeDayPopup() {
+  const el = document.getElementById('day-popup');
+  if (el) el.remove();
+}
+function ensurePlanningTask() {
+  const key = 'planAdded_' + todayKey();
+  if (!ls(key, false)) {
+    dailyPlan.unshift({ name: 'Plan today\'s schedule (10min)', hrs: 0.17, done: false });
+    ss('dailyPlan_' + todayKey(), dailyPlan);
+    ss(key, true);
+  }
+}
+
+// ---- ASSIGNMENTS ----
+let assignments = ls('assignments', []);
+let asgnFilter = 'pending';
+
+const SUBJECT_COLORS = {
+  'Physics / Mechanics': '#f07060',
+  'SAT prep': '#f0c060',
+  'Shadow Calc BC': '#6080f0',
+  'ASU Calculus': '#f0a060',
+  'Robotic arm project': '#60f0b0',
+  'Math club planning': '#60f0b0',
+  'Spanish Literature HL': '#f060a8',
+  'History HL': '#60c8f0',
+  'Math AA SL': '#c8f060',
+  'English B HL': '#a060f0',
+  'Business Mgmt SL': '#6080f0',
+  'Other': '#888'
+};
+
+const PRIORITY_COLORS = { high: '#f07060', med: '#f0c060', low: '#7070a0' };
+const PRIORITY_LABELS = { high: 'High', med: 'Med', low: 'Low' };
+
+function addAssignment() {
+  const name = document.getElementById('asgn-name').value.trim();
+  const subject = document.getElementById('asgn-subject').value;
+  const dd = document.getElementById('asgn-due-d').value.padStart(2,'0');
+  const mm = document.getElementById('asgn-due-m').value;
+  const yy = document.getElementById('asgn-due-y').value || '2026';
+  const due = (dd && mm) ? yy + '-' + mm + '-' + dd : '';
+  const priority = document.getElementById('asgn-priority').value;
+  const est = parseFloat(document.getElementById('asgn-est').value) || null;
+  if (!name) { showNotif('Enter an assignment name.'); return; }
+  assignments.push({ id: Date.now(), name, subject, due, priority, est, done: false, addedOn: todayKey() });
+  ss('assignments', assignments);
+  document.getElementById('asgn-name').value = '';
+  document.getElementById('asgn-due-d').value = '';
+  document.getElementById('asgn-due-m').value = '';
+  document.getElementById('asgn-due-y').value = '2026';
+  document.getElementById('asgn-est').value = '';
+  renderAssignments();
+  showNotif('Assignment added.');
+}
+
+function toggleAssignment(id) {
+  const a = assignments.find(x => x.id === id);
+  if (a) { a.done = !a.done; ss('assignments', assignments); renderAssignments(); }
+}
+
+function deleteAssignment(id) {
+  assignments = assignments.filter(x => x.id !== id);
+  ss('assignments', assignments);
+  renderAssignments();
+}
+
+function setFilter(f, btn) {
+  asgnFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAssignments();
+}
+
+function getDueLabel(due) {
+  if (!due) return { text: '—', cls: 'due-normal' };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(due + 'T00:00:00');
+  const diff = Math.ceil((d - today) / 86400000);
+  if (diff < 0) return { text: 'Overdue ' + Math.abs(diff) + 'd', cls: 'due-overdue' };
+  if (diff === 0) return { text: 'Due today', cls: 'due-today' };
+  if (diff === 1) return { text: 'Tomorrow', cls: 'due-today' };
+  if (diff <= 4) return { text: 'In ' + diff + ' days', cls: 'due-soon' };
+  return { text: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), cls: 'due-normal' };
+}
+
+function renderAssignments() {
+  assignments = ls('assignments', []);
+  let filtered = [...assignments];
+  if (asgnFilter === 'pending') filtered = filtered.filter(a => !a.done);
+  else if (asgnFilter === 'done') filtered = filtered.filter(a => a.done);
+  else if (asgnFilter === 'high') filtered = filtered.filter(a => a.priority === 'high' && !a.done);
+
+  // Sort by due date (nulls last), then priority
+  const priorityOrder = { high: 0, med: 1, low: 2 };
+  filtered.sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (a.due && b.due) return new Date(a.due) - new Date(b.due);
+    if (a.due) return -1;
+    if (b.due) return 1;
+    return priorityOrder[a.priority] - priorityOrder[b.priority];
+  });
+
+  const tbody = document.getElementById('asgn-tbody');
+  const empty = document.getElementById('asgn-empty');
+  const count = document.getElementById('asgn-count');
+  const pending = assignments.filter(a => !a.done).length;
+  count.textContent = pending + ' pending · ' + assignments.length + ' total';
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map(a => {
+    const due = getDueLabel(a.due);
+    const color = SUBJECT_COLORS[a.subject] || '#888';
+    const pcol = PRIORITY_COLORS[a.priority] || '#888';
+    return `<tr class="${a.done ? 'done-row' : ''}">
+      <td><button class="asgn-done-btn ${a.done ? 'done' : ''}" onclick="toggleAssignment(${a.id})">${a.done ? '✓' : ''}</button></td>
+      <td><span class="asgn-name">${a.name}</span></td>
+      <td>${a.subject ? `<span class="asgn-subject-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${a.subject}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td><span class="${due.cls}">${due.text}</span></td>
+      <td><span style="display:flex;align-items:center;gap:4px"><span class="priority-dot" style="background:${pcol}"></span><span style="font-family:'DM Mono',monospace;font-size:11px;color:${pcol}">${PRIORITY_LABELS[a.priority]}</span></span></td>
+      <td><span class="est-time">${a.est ? a.est + 'hr' : '—'}</span></td>
+      <td><button class="asgn-del-btn" onclick="deleteAssignment(${a.id})">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- EXPORT / IMPORT ----
+function exportData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    try { data[key] = JSON.parse(localStorage.getItem(key)); }
+    catch { data[key] = localStorage.getItem(key); }
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'scc_backup_' + todayKey() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotif('Data exported successfully.');
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!confirm('This will overwrite all current data with the imported file. Continue?')) return;
+      localStorage.clear();
+      Object.entries(data).forEach(([k, v]) => {
+        try { localStorage.setItem(k, JSON.stringify(v)); }
+        catch { localStorage.setItem(k, v); }
+      });
+      // Reload all state from fresh localStorage
+      weekData = ls(weekKey(), {});
+      activityLog = ls('activityLog', {});
+      dailyPlan = ls('dailyPlan_' + todayKey(), []);
+      insultIndex = ls('insultIndex', 0);
+      renderOverview();
+      renderTracker();
+      renderStreaks();
+      showNotif('Data imported successfully.');
+    } catch {
+      showNotif('Import failed — invalid file.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+
+let _currentDay = todayKey();
+
+function checkDayRollover() {
+  const newDay = todayKey();
+  if (newDay !== _currentDay) {
+    // Day has changed — reload daily plan, re-check planning task, refresh all displays
+    _currentDay = newDay;
+    weekData = ls(weekKey(), {});
+    dailyPlan = ls('dailyPlan_' + todayKey(), []);
+    ensurePlanningTask();
+    renderOverview();
+    renderStreaks();
+    updateLiveClock();
+  }
+}
+
+function updateLiveClock() {
+  const now = new Date();
+  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('footer-date').textContent = dayName + ', ' + dateStr + ' · ' + timeStr;
+}
+
+// ---- INIT ----
+ensurePlanningTask();
+updateLiveClock();
+renderOverview();
+renderQueue();
+
+// Update clock every minute, check for day rollover every minute too
+setInterval(() => {
+  updateLiveClock();
+  checkDayRollover();
+}, 60000);
+</script>
+</body>
+</html>
