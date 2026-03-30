@@ -261,6 +261,35 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .asgn-empty { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
 .est-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
 
+
+/* ---- CONTEXT OVERLAY ---- */
+.ctx-overlay { position: fixed; inset: 0; z-index: 900; display: none; pointer-events: none; }
+.ctx-overlay.open { display: block; }
+.ctx-backdrop { position: absolute; inset: 0; background: rgba(10,10,15,0.5); pointer-events: all; }
+.ctx-panel { position: absolute; top: 60px; right: 24px; width: 420px; max-height: calc(100vh - 90px); background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; pointer-events: all; box-shadow: 0 24px 64px rgba(0,0,0,0.7); }
+.ctx-header { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border); gap: 10px; flex-shrink: 0; }
+.ctx-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--accent); flex: 1; }
+.ctx-hotkey { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 2px; }
+.ctx-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 4px; }
+.ctx-close:hover { color: var(--danger); }
+.ctx-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; }
+.ctx-tab { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 14px; border: none; background: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.ctx-tab:hover { color: var(--text); }
+.ctx-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+.ctx-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
+.ctx-section { margin-bottom: 20px; }
+.ctx-section-title { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.ctx-card { background: var(--surface2); border: 1px solid var(--border); padding: 12px 14px; margin-bottom: 8px; }
+.ctx-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.ctx-card-body { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
+.ctx-link { display: inline-flex; align-items: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent2); letter-spacing: 1px; text-decoration: none; padding: 4px 10px; border: 1px solid rgba(96,200,240,0.3); }
+.ctx-link:hover { background: rgba(96,200,240,0.08); }
+.ctx-rubric-score { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 8px; background: rgba(200,240,96,0.1); color: var(--accent); border: 1px solid rgba(200,240,96,0.2); margin-left: 8px; }
+.ctx-formula-placeholder { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 13px; border: 1px dashed var(--border); }
+.ctx-new-week-btn { width: 100%; padding: 10px; border: 1px solid var(--warn); background: none; color: var(--warn); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; cursor: pointer; margin-top: 12px; }
+.ctx-new-week-btn:hover { background: rgba(240,192,96,0.08); }
+.ctx-author-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); display: inline-block; margin-right: 6px; }
+
 /* NOTIFICATION */
 .notif { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--accent); padding: 14px 20px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); z-index: 300; max-width: 300px; transform: translateY(20px); opacity: 0; transition: all 0.3s; }
 .notif.show { transform: translateY(0); opacity: 1; }
@@ -1532,6 +1561,217 @@ setInterval(() => {
   updateLiveClock();
   checkDayRollover();
 }, 60000);
+</script>
+
+<!-- ==================== CONTEXT OVERLAY ==================== -->
+<div class="ctx-overlay" id="ctx-overlay">
+  <div class="ctx-backdrop" onclick="closeOverlay()"></div>
+  <div class="ctx-panel">
+    <div class="ctx-header">
+      <div class="ctx-title">Quick Reference</div>
+      <div class="ctx-hotkey">CTRL+`</div>
+      <button class="ctx-close" onclick="closeOverlay()">×</button>
+    </div>
+    <div class="ctx-tabs" id="ctx-tabs">
+      <button class="ctx-tab active" onclick="switchCtxTab('formulas', this)">Formulas</button>
+      <button class="ctx-tab" onclick="switchCtxTab('literature', this)">Literature</button>
+      <button class="ctx-tab" onclick="switchCtxTab('rubrics', this)">Rubrics</button>
+    </div>
+    <div class="ctx-body" id="ctx-body"></div>
+  </div>
+</div>
+
+<script>
+// ---- CONTEXT OVERLAY JS ----
+var ctxOpen = false;
+var lastCtxTab = 'formulas';
+try { lastCtxTab = JSON.parse(localStorage.getItem('lastCtxTab')) || 'formulas'; } catch(e) {}
+
+function ctxFindTabBtn(name) {
+  var tabs = document.querySelectorAll('.ctx-tab');
+  for (var i = 0; i < tabs.length; i++) {
+    if (tabs[i].textContent.toLowerCase().trim() === name.toLowerCase()) return tabs[i];
+  }
+  return null;
+}
+
+function renderFormulas() {
+  var week = null, topic = '';
+  try { week = JSON.parse(localStorage.getItem('ctxFormulaWeek')); } catch(e) {}
+  try { topic = JSON.parse(localStorage.getItem('ctxFormulaTopic')) || ''; } catch(e) {}
+  var weekLabel = week ? 'Week of ' + week : 'No topic set';
+  return '<div class="ctx-section">'
+    + '<div class="ctx-section-title">Current Topic \u2014 ' + weekLabel + (topic ? ': ' + topic : '') + '</div>'
+    + '<div class="ctx-formula-placeholder">Formula booklets coming soon.<br><br>Set your topic below, then annotated formulas for that topic will appear here.</div>'
+    + '<div style="margin-top:12px">'
+    + '<input class="form-input" id="ctx-topic-input" placeholder="Enter this weeks topic (e.g. Rotation)..." value="' + topic + '" style="margin-bottom:8px" />'
+    + '<button class="ctx-new-week-btn" onclick="ctxNewWeek()">\u21ba New Week \u2014 Clear &amp; Set Topic</button>'
+    + '</div></div>'
+    + '<div class="ctx-section"><div class="ctx-section-title">Math IA Formula Reference</div>'
+    + '<div class="ctx-formula-placeholder">Math formula booklet \u2014 coming soon.</div></div>';
+}
+
+function renderLiterature() {
+  var authors = [
+    { name: 'Isabel Allende', desc: 'La casa de los esp\u00edritus, Eva Luna. Magical realism woven with political history, strong female voices, and Latin American identity.', link: 'https://drive.google.com/drive/u/0/folders/1kacz0vLbJQESPe7ZVbqIX_1-AWqo1guj' },
+    { name: 'Franz Kafka', desc: 'La metamorfosis, El proceso. Existential dread, bureaucratic absurdity, alienation. Sparse prose heightening surreal situations.', link: 'https://drive.google.com/drive/u/0/folders/1I5ZVnMsfASmXvzz7_kI_5anhH-EL1Vj1' },
+    { name: 'Gustave Flaubert', desc: 'Madame Bovary. Realism, free indirect discourse, critique of romanticism and bourgeois society. Ironic detachment from characters.', link: 'https://drive.google.com/drive/u/0/folders/1Ezi3ymuXsP3VE72mS5m_owos4Q0Z45jV' },
+    { name: 'Jean-Paul Sartre', desc: 'A puerta cerrada, La n\u00e1usea. Existentialism \u2014 existence precedes essence, radical freedom, bad faith, the Other as threat.', link: 'https://drive.google.com/drive/u/0/folders/1MKfI8H6pK5iJ5ivZ7wMthLZ85NPOcbGy' },
+    { name: 'Albert Camus', desc: 'El extranjero, El mito de S\u00edsif o. Absurdism \u2014 life is meaningless but must be lived fully. Detached minimalist style.', link: 'https://drive.google.com/drive/u/0/folders/19-GpbRU_ZuUPj-KH5aG-YWUhIOXR1ty0' },
+    { name: 'R.L. Stevenson', desc: 'Dr. Jekyll and Mr. Hyde. Duality of human nature, Victorian repression, Gothic horror. Epistolary structure, moral ambiguity.', link: 'https://drive.google.com/drive/u/0/folders/1romQLNN4VOvdzKHpDtsYG1TaeHV01Me1' },
+    { name: 'Marjane Satrapi', desc: 'Pers\u00e9polis. Autobiographical graphic novel. Identity, political oppression, exile, feminism in post-revolutionary Iran.', link: 'https://drive.google.com/drive/u/0/folders/1RU85ZU8KSGYrdVFQitqs6yYYtNqTwK2o' },
+    { name: 'Augusto Roa Bastos', desc: 'El trueno entre las hojas. Paraguayan identity, Guaran\u00ed oral tradition woven into Spanish, political oppression, mythic realism.', link: 'https://drive.google.com/drive/u/0/folders/1FMA5Z2bVSIAG0ncnzat_f9Pb4tAMhQ_z' }
+  ];
+  var html = '<div class="ctx-section"><div class="ctx-section-title">Authors</div>';
+  for (var i = 0; i < authors.length; i++) {
+    var a = authors[i];
+    html += '<div class="ctx-card">'
+      + '<div class="ctx-card-title"><span class="ctx-author-dot"></span>' + a.name + '</div>'
+      + '<div class="ctx-card-body">' + a.desc + '</div>'
+      + '<a class="ctx-link" href="' + a.link + '" target="_blank">\u2197 Drive Folder</a>'
+      + '</div>';
+  }
+  html += '</div><div style="margin-top:8px">'
+    + '<a class="ctx-link" href="https://drive.google.com/drive/u/0/folders/1cqqfK6lSZxbkorF_Y3zqJyXlFCxJ_NSu" target="_blank" style="width:100%;justify-content:center">\u2197 Main Literature Drive</a>'
+    + '</div>';
+  return html;
+}
+
+function renderRubrics() {
+  var rubrics = [
+    { name: 'Ensayo NS \u2014 Literatura A HL', total: '20 pts', note: '1,200\u20131,500 palabras. Obra distinta a EI y Prueba 2.', link: 'https://www.scribd.com/document/586877031/RUBRICA-Ensayo-del-nivel-superior-IB',
+      criteria: [
+        { code: 'A', name: 'Conocimiento, comprensi\u00f3n e interpretaci\u00f3n', pts: 5, summary: 'Interpretaci\u00f3n persuasiva, referencias bien elegidas que respaldan la l\u00ednea de indagaci\u00f3n.' },
+        { code: 'B', name: 'An\u00e1lisis y evaluaci\u00f3n', pts: 5, summary: 'An\u00e1lisis persp icaz de rasgos textuales y decisiones del autor. Evaluaci\u00f3n convincente.' },
+        { code: 'C', name: 'Focalizaci\u00f3n, organizaci\u00f3n y desarrollo', pts: 5, summary: 'L\u00ednea de indagaci\u00f3n clara y cohesiva. Ejemplos bien integrados. Estructura eficaz.' },
+        { code: 'D', name: 'Lenguaje', pts: 5, summary: 'Lenguaje preciso, registro adecuado. Alta correcci\u00f3n gramatical y vocabulario.' }
+      ]
+    },
+    { name: 'Physics IA', total: '24 pts', note: '6\u201312 pages. Raw data, processed data, and conclusion required.', link: '#',
+      criteria: [
+        { code: 'PE', name: 'Personal Engagement', pts: 2, summary: 'Personal interest, initiative, and creative thinking evident.' },
+        { code: 'Ex', name: 'Exploration', pts: 6, summary: 'Clear RQ, relevant background, appropriate methodology, safety awareness.' },
+        { code: 'An', name: 'Analysis', pts: 6, summary: 'Sufficient relevant data, correct processing, error and uncertainty analysis.' },
+        { code: 'Ev', name: 'Evaluation', pts: 6, summary: 'Conclusion consistent with data. Strengths, weaknesses, realistic improvements.' },
+        { code: 'Co', name: 'Communication', pts: 4, summary: 'Clear structure, appropriate format, correct terminology.' }
+      ]
+    },
+    { name: 'Math AA SL IA', total: '20 pts', note: '12\u201320 pages. Mathematics must be at or above SL standard.', link: '#',
+      criteria: [
+        { code: 'A', name: 'Communication', pts: 4, summary: 'Coherent, well-organised, concise. Aims and conclusions clear.' },
+        { code: 'B', name: 'Mathematical Presentation', pts: 4, summary: 'Appropriate notation, terminology, technology use, definitions.' },
+        { code: 'C', name: 'Personal Engagement', pts: 3, summary: 'Own perspective, independent thinking, creative approach.' },
+        { code: 'D', name: 'Reflection', pts: 3, summary: 'Critical reflection on results, limitations, and extensions.' },
+        { code: 'E', name: 'Use of Mathematics', pts: 6, summary: 'Correct, thorough, sophisticated mathematics at SL level or above.' }
+      ]
+    },
+    { name: 'Business Management SL IA', total: '25 pts', note: '1,500\u20132,000 words. Real organization required.', link: '#',
+      criteria: [
+        { code: 'A', name: 'Introduction', pts: 5, summary: 'Clear issue, significance, and focused research question.' },
+        { code: 'B', name: 'Methodology', pts: 5, summary: 'Appropriate sources, rationale explained, limitations acknowledged.' },
+        { code: 'C', name: 'Results and Findings', pts: 5, summary: 'Data presented clearly, business tools applied correctly.' },
+        { code: 'D', name: 'Analysis and Discussion', pts: 5, summary: 'Theory linked to findings, multiple perspectives, limitations discussed.' },
+        { code: 'E', name: 'Conclusion and Evaluation', pts: 5, summary: 'Answers RQ directly, feasible recommendations, reflection included.' }
+      ]
+    },
+    { name: 'History HL IA', total: '25 pts', note: '2,200 words max. Must focus on a historical question.', link: '#',
+      criteria: [
+        { code: 'A', name: 'Identification and Evaluation of Sources', pts: 6, summary: 'Two sources analysed for origin, purpose, value, and limitations.' },
+        { code: 'B', name: 'Investigation', pts: 15, summary: 'Well-structured analytical response. Evidence supports argument, counter-arguments considered.' },
+        { code: 'C', name: 'Reflection', pts: 4, summary: 'Reflects on methods used by historians and challenges of historical inquiry.' }
+      ]
+    },
+    { name: 'Physics EE', total: '34 pts', note: '4,000 words max. RPPF with 3 reflections required.', link: '#',
+      criteria: [
+        { code: 'A', name: 'Focus and Method', pts: 6, summary: 'Clear RQ with physics context. Methodology appropriate. Variables identified.' },
+        { code: 'B', name: 'Knowledge and Understanding', pts: 6, summary: 'Physics concepts correctly applied. Theory linked to experiment.' },
+        { code: 'C', name: 'Critical Thinking', pts: 12, summary: 'Rigorous data analysis, results interpreted in theory context, errors evaluated.' },
+        { code: 'D', name: 'Presentation', pts: 4, summary: 'Clear structure, abstract, bibliography, citations correct.' },
+        { code: 'E', name: 'Engagement', pts: 6, summary: 'Assessed via RPPF. Intellectual initiative and personal engagement throughout.' }
+      ]
+    }
+  ];
+  var html = '';
+  for (var i = 0; i < rubrics.length; i++) {
+    var r = rubrics[i];
+    html += '<div class="ctx-section"><div class="ctx-section-title">' + r.name + ' <span class="ctx-rubric-score">' + r.total + '</span></div>';
+    if (r.note) {
+      html += '<div style="font-size:11px;color:var(--warn);font-family:monospace;margin-bottom:10px;padding:6px 10px;background:rgba(240,192,96,0.06);border:1px solid rgba(240,192,96,0.15)">' + r.note + '</div>';
+    }
+    for (var j = 0; j < r.criteria.length; j++) {
+      var c = r.criteria[j];
+      html += '<div class="ctx-card">'
+        + '<div class="ctx-card-title">'
+        + '<span style="font-family:monospace;font-size:10px;color:var(--accent);margin-right:8px">' + c.code + '</span>'
+        + c.name
+        + '<span style="font-family:monospace;font-size:10px;color:var(--muted);float:right">' + c.pts + 'pts</span>'
+        + '</div>'
+        + '<div class="ctx-card-body">' + c.summary + '</div>'
+        + '</div>';
+    }
+    if (r.link !== '#') {
+      html += '<a class="ctx-link" href="' + r.link + '" target="_blank" style="margin-top:4px">\u2197 Full Rubric</a>';
+    } else {
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);margin-top:8px">Paste rubric URL to link</div>';
+    }
+    html += '</div>';
+  }
+  return html;
+}
+
+function switchCtxTab(name, btn) {
+  lastCtxTab = name;
+  try { localStorage.setItem('lastCtxTab', JSON.stringify(name)); } catch(e) {}
+  var tabs = document.querySelectorAll('.ctx-tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  if (btn) btn.classList.add('active');
+  else {
+    var found = ctxFindTabBtn(name);
+    if (found) found.classList.add('active');
+  }
+  var body = document.getElementById('ctx-body');
+  if (name === 'formulas') body.innerHTML = renderFormulas();
+  else if (name === 'literature') body.innerHTML = renderLiterature();
+  else if (name === 'rubrics') body.innerHTML = renderRubrics();
+}
+
+function getTimerSubjectTab() {
+  if (!timerState || (!timerState.running && !timerState.paused)) return null;
+  var subj = (timerState.subj || '').toLowerCase();
+  if (subj.indexOf('physics') >= 0 || subj.indexOf('mechanics') >= 0 || subj.indexOf('math') >= 0 || subj.indexOf('calc') >= 0) return 'formulas';
+  if (subj.indexOf('literature') >= 0 || subj.indexOf('spanish') >= 0 || subj.indexOf('kafka') >= 0 || subj.indexOf('sartre') >= 0 || subj.indexOf('camus') >= 0 || subj.indexOf('allende') >= 0 || subj.indexOf('flaubert') >= 0 || subj.indexOf('satrapi') >= 0 || subj.indexOf('roa') >= 0 || subj.indexOf('stevenson') >= 0) return 'literature';
+  return null;
+}
+
+function openOverlay(defaultTab) {
+  var tab = defaultTab || getTimerSubjectTab() || lastCtxTab || 'formulas';
+  ctxOpen = true;
+  document.getElementById('ctx-overlay').classList.add('open');
+  var btn = ctxFindTabBtn(tab);
+  switchCtxTab(tab, btn);
+}
+
+function closeOverlay() {
+  ctxOpen = false;
+  document.getElementById('ctx-overlay').classList.remove('open');
+}
+
+function ctxNewWeek() {
+  var topicEl = document.getElementById('ctx-topic-input');
+  var topic = topicEl ? topicEl.value.trim() : '';
+  if (!confirm('Start new week? This will clear this week formula notes.')) return;
+  try { localStorage.setItem('ctxFormulaWeek', JSON.stringify(new Date().toISOString().slice(0,10))); } catch(e) {}
+  try { localStorage.setItem('ctxFormulaTopic', JSON.stringify(topic)); } catch(e) {}
+  switchCtxTab('formulas', ctxFindTabBtn('formulas'));
+  showNotif('New week started' + (topic ? ' \u2014 ' + topic : ''));
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && (e.code === 'Backquote' || e.keyCode === 192)) {
+    e.preventDefault();
+    if (ctxOpen) closeOverlay(); else openOverlay();
+  }
+});
 </script>
 </body>
 </html>
